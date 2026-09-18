@@ -11,41 +11,55 @@ requires: ["CAIP-2"]
 
 # Namespace for Keeta
 
-[Keeta][keeta-home] is a Delegated Proof of Stake (DPoS) Layer-1 designed for high-throughput asset transfers, real-world asset tokenization, and built-in compliance primitives (KYC, sanctions, ACLs).
-The protocol uses a [Directed Acyclic Graph (DAG)][whitepaper] of per-account block chains rather than a single linearly-ordered ledger, which lets independent accounts publish concurrently and lets the network achieve sub-second finality.
+[Keeta][keeta-home] is a Delegated Proof of Stake (DPoS) Layer-1 designed for high-throughput asset transfers.
+Its ledger is a [Directed Acyclic Graph (DAG)][whitepaper] of per-account block chains rather than a single linearly-ordered chain: each account publishes blocks to its own chain, and operations in those blocks reference other accounts' chains, which lets independent accounts publish concurrently.
 
-The `keeta` namespace describes both the public Keeta main network and any of its sibling networks -- the test, staging, and dev networks, and any privately-launched **sub-network** (a private instance that runs the same protocol but with isolated transaction visibility and its own validator set).
-All networks share the same key-pair format, address encoding, and operation set, so a single Keeta key pair can be used across networks and the only thing that distinguishes one from another in CAIP terms is its `networkId`.
+For developers coming from Bitcoin or the EVM, the following differences shape every identifier in this namespace:
+
+- There are no smart contracts.
+  Tokens, storage accounts, and the network itself are [accounts][accounts] in the same address space as key-pair-backed accounts, each with a chain of its own.
+- A **keyed account** holds a private key and signs its own blocks.
+  A **generated account** (also called an identifier account) -- a token, storage account, network account, or multisig -- has no private key, and its blocks are signed by a keyed account holding permission over it.
+- An address is the account's public key itself with a type byte and a checksum, base32-encoded, rather than a hash of the key.
+  The address alone reveals the account type and signature algorithm.
+- Keeta currently supports three signature algorithms (ECDSA secp256k1/r1 and Ed25519), and its key format is extensible.
+- The same key pair produces the same address on every Keeta network, but balances, permissions, and history are per network.
+  Generated accounts exist only on the network where they were created.
+
+A Keeta network is identified by an integer `networkId`.
+The public networks are main, test, staging, and dev; a privately-launched network runs the same protocol with its own validators, its own ledger, and its own `networkId`.
+A network may host subnets, which are subordinate to it and are not identified by this revision of the namespace (see the [CAIP-2 profile][CAIP-2 Profile]).
+Every network has a network account and a base token derived from its `networkId`; the base token of the main network is KTA.
 
 ## Rationale
 
-Registering the `keeta` namespace enables standard CAIP-2 chain identifiers for every Keeta network distinguished by their numeric `networkId`.
-Keeta does not run an EVM or similar and has no smart-contract addresses.
-Therefore, CAIP profiles in this namespace focus on identifying networks, accounts (keyed and identifier-style), and tokens, not contracts.
+Registering the `keeta` namespace enables standard CAIP-2 chain identifiers for every Keeta network distinguished by its numeric `networkId`.
+Because Keeta has no contract addresses, the CAIP profiles in this namespace focus on identifying networks, accounts (keyed and generated), and tokens.
 
 ## Governance
 
 Keeta uses Delegated Proof of Stake.
-Token holders elect representatives, which vote on the validity of vote staples (atomic groups of blocks).
-Network-wide policy -- for example, the right to create new tokens or storage accounts -- is expressed as permissions on the [Network Account][accounts], a deterministically-generated identifier account that exists once per network.
+Token holders delegate their balance to representatives, which vote on the validity of vote staples (atomic groups of blocks); the consensus rules are determined by the representatives.
+Network-wide policy -- for example, the right to create new tokens or storage accounts -- is expressed as permissions on the network account, a generated account that exists once per network.
 
-Protocol changes are coordinated by Keeta Token Genesis LLC and the validator set.
-The reference implementation is published as the [`@keetanetwork/keetanet-client`][sdk] TypeScript SDK; the protocol specification is described in the [Keeta whitepaper][whitepaper].
+The block structure is versioned so that the protocol can change without disrupting existing operations.
+The reference implementation is published as the [`@keetanetwork/keetanet-client`][sdk] TypeScript SDK; the protocol is described in the [Keeta whitepaper][whitepaper].
 
 ## References
 
 - [Keeta home][keeta-home] - public site and ecosystem overview.
 - [Keeta whitepaper][whitepaper] - protocol specification, DAG model, consensus, and account model.
 - [Keeta documentation][keeta-docs] - developer guide, SDK reference, and anchor framework.
-- [Keeta SDK source][sdk] - the canonical reference implementation that defines `NetworkIDs`, address encoding, and key algorithms cited by the CAIP profiles in this namespace.
+- [Keeta SDK package][sdk] - the reference implementation that defines `NetworkIDs`, address encoding, and key algorithms cited by the CAIP profiles in this namespace.
 - [Public network resources][official-links] - wallet, block explorer, and faucet endpoints for the public main and test networks.
 
 [keeta-home]: https://keeta.com/
 [whitepaper]: https://keeta.com/whitepaper.pdf
 [keeta-docs]: https://docs.keeta.com/
-[sdk]: https://github.com/KeetaNetwork/keetanet-client
+[sdk]: https://www.npmjs.com/package/@keetanetwork/keetanet-client
 [official-links]: https://docs.keeta.com/other-documentation/official-links
 [accounts]: https://docs.keeta.com/components/accounts
+[CAIP-2 Profile]: ./caip2.md
 
 ## Copyright
 
