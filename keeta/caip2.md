@@ -16,17 +16,19 @@ _For context, see the [CAIP-2][] specification._
 ## Introduction
 
 A Keeta network -- main, test, staging, dev, or any privately-launched network -- is uniquely identified by a single non-negative integer called its `networkId`.
-A privately-launched network is a private instance that runs the same Keeta protocol but with isolated transaction visibility and its own validator set; it shares the key-pair format and address encoding with the public networks but is distinguished from them solely by its `networkId`.
-The same `networkId` is used by the protocol to deterministically derive the network's [Network Account][accounts] and base token address, so two networks with the same `networkId` are by construction the same network.
+Every network has its own set of validators and its own ledger; a privately-launched network runs the same protocol and shares the key-pair format and address encoding with the public networks, and is distinguished from them solely by its `networkId`.
+The same `networkId` is used by the protocol to deterministically derive the network's [network account][accounts] and base token address, so two networks with the same `networkId` are by construction the same network.
 
-This profile maps that `networkId` to a [CAIP-2][] reference.
+A network may additionally host subnets, which are subordinate to it and identified together with it rather than by a `networkId` of their own; this revision of the profile does not identify subnets (see [Additional Considerations](#additional-considerations)).
+
+This profile maps the `networkId` to a [CAIP-2][] reference.
 
 ## Specification
 
 ### Semantics
 
 The single input is a Keeta `networkId`: a non-negative integer that the protocol treats as a `bigint`.
-Every Keeta network has exactly one, baked into the network's deterministic [Network Account][accounts] and base token address.
+Every Keeta network has exactly one, baked into the network's deterministic [network account][accounts] and base token address.
 
 The four well-known networks shipped with the SDK ([source][sdk]) are:
 
@@ -38,7 +40,9 @@ The four well-known networks shipped with the SDK ([source][sdk]) are:
 | `dev`         |               `4474198` | `0x444556`          |
 
 Privately-launched networks have their own arbitrary `networkId` values chosen by the operator.
-The four `networkId` values listed above are reserved for the public networks they identify and MUST NOT be reused by private networks.
+There is no registry of `networkId` values; the four listed above are reserved for the public networks they identify and MUST NOT be reused by private networks.
+
+The value `0` is the default `networkId` used by Keeta's SDKs for local test networks and offline fixtures, comparable to `eip155:31337`; it never identifies a public network and MUST NOT be reused by a privately-launched network.
 
 ### Syntax
 
@@ -111,6 +115,9 @@ keeta:4474198
 
 # Example private network with an arbitrary numeric id
 keeta:9000001
+
+# Local test network (SDK default; see Semantics)
+keeta:0
 ```
 
 The four well-known networks above correspond exactly to the entries in the SDK's `NetworkIDs` table (`main`, `test`, `staging`, `dev`).
@@ -124,14 +131,23 @@ keeta:                # empty reference
 keeta:main            # symbolic aliases are not permitted
 ```
 
+## Additional Considerations
+
+### Subnets
+
+A Keeta block carries an optional subnet identifier alongside its `networkId`, and a ledger is scoped to one network and one subnet.
+Each subnet belongs to exactly one network, and a network may host many subnets, so a subnet is identified by its network together with its own subnet identifier rather than by a `networkId` of its own.
+This revision of the profile identifies networks only.
+A future revision will identify subnets as `keeta:<networkId>-<subnetId>` once they are publicly deployed; `-` is a permitted character in a [CAIP-2][] reference.
+
 ## References
 
-- Keeta [accounts] - describes the Network Account and how it is derived from `networkId`.
-- Keeta [SDK source][sdk] - `config/index.ts` defines `NetworkIDs` and `getNetworkAlias()`.
+- Keeta [accounts] - describes the network account and how it is derived from `networkId`.
+- Keeta [SDK package][sdk] - `config/index.d.ts` declares `NetworkIDs` and `getNetworkAlias()`.
 - Keeta [whitepaper] - protocol overview.
 
 [accounts]: https://docs.keeta.com/components/accounts
-[sdk]: https://github.com/KeetaNetwork/keetanet-client
+[sdk]: https://www.npmjs.com/package/@keetanetwork/keetanet-client
 [whitepaper]: https://keeta.com/whitepaper.pdf
 [CAIP-2]: https://chainagnostic.org/CAIPs/caip-2
 
