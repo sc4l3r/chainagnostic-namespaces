@@ -6,7 +6,7 @@ discussions-to: https://github.com/ChainAgnostic/namespaces/pull/183
 status: Draft
 type: Standard
 created: 2026-04-27
-requires: CAIP-2
+requires: ["CAIP-2"]
 ---
 
 # CAIP-2
@@ -17,7 +17,7 @@ _For context, see the [CAIP-2][] specification._
 
 A Keeta network -- main, test, staging, dev, or any privately-launched network -- is uniquely identified by a single non-negative integer called its `networkId`.
 Every network has its own set of validators and its own ledger; a privately-launched network runs the same protocol and shares the key-pair format and address encoding with the public networks, and is distinguished from them solely by its `networkId`.
-The same `networkId` is used by the protocol to deterministically derive the network's [network account][accounts] and base token address, so two networks with the same `networkId` are by construction the same network.
+The same `networkId` is used by the protocol to deterministically derive the network's [network account][accounts] and base token address, so a `networkId` identifies exactly one network.
 
 A network may additionally host subnets, which are subordinate to it and identified together with it rather than by a `networkId` of their own; this revision of the profile does not identify subnets (see [Additional Considerations](#additional-considerations)).
 
@@ -39,14 +39,15 @@ The four well-known networks shipped with the SDK ([source][sdk]) are:
 | `staging`     |               `5472769` | `0x538201`          |
 | `dev`         |               `4474198` | `0x444556`          |
 
-Privately-launched networks have their own arbitrary `networkId` values chosen by the operator.
-There is no registry of `networkId` values; the four listed above are reserved for the public networks they identify and MUST NOT be reused by private networks.
+Privately-launched networks have their own `networkId` values chosen by the operator.
+There is no formal registry of `networkId` values; operators are expected to coordinate to avoid collisions, and the four values listed above are reserved for the public networks they identify and MUST NOT be reused.
 
 The value `0` is the default `networkId` used by Keeta's SDKs for local test networks and offline fixtures, comparable to `eip155:31337`; it never identifies a public network and MUST NOT be reused by a privately-launched network.
 
 ### Syntax
 
-The CAIP-2 namespace is `keeta`. The CAIP-2 `reference` MUST be the network's `networkId`, rendered as a decimal integer with no leading zeros and no `0x` prefix:
+The CAIP-2 namespace is `keeta`.
+The CAIP-2 `reference` MUST be the network's `networkId`, rendered as a decimal integer with no leading zeros and no `0x` prefix:
 
 ```
 keeta:<networkId>
@@ -59,6 +60,7 @@ The `reference` MUST match:
 ```
 
 This is the full 32-digit cap allowed by the [CAIP-2][] reference field.
+A `networkId` is an unbounded integer, so a network whose `networkId` exceeds 32 decimal digits cannot be identified under this profile.
 
 ### Resolution Mechanics
 
@@ -81,8 +83,8 @@ const reference = "1413829460"; // from "keeta:1413829460"
 const alias = KeetaNet.Client.Config.getNetworkAlias(BigInt(reference)); // "test"
 ```
 
-For a Keeta address known to be a [Network Account][accounts], the `networkId` is the value the address was generated from via `Account.generateNetworkAddress(networkId)`.
-Implementations that need to validate a [CAIP-2][] string against a live network SHOULD compare the address returned by `userClient.networkAddress` to the address recomputed from the candidate `networkId`.
+For a Keeta address known to be a [network account][accounts], the `networkId` is the value the address was generated from via `Account.generateNetworkAddress(networkId)`.
+Implementations that need to validate a [CAIP-2][] string against a live network SHOULD compare the address returned by `client.networkAddress` (on the `UserClient` above) to the address recomputed from the candidate `networkId`.
 
 ## Rationale
 

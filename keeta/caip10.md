@@ -44,7 +44,7 @@ The body is the [RFC 4648][rfc4648] base32 encoding, lowercase and without paddi
 type || key || SHA3-256(type || key)[0..5]
 ```
 
-- `type` is one byte identifying the account kind: `0` ECDSA secp256k1, `1` Ed25519, `2` network account, `3` token, `4` storage account, `6` ECDSA secp256r1, `7` multisig.
+- `type` is one byte identifying the account kind: `0` ECDSA secp256k1, `1` Ed25519, `2` network account, `3` token, `4` storage account, `6` ECDSA secp256r1, `7` multisig; the value `5` is unassigned.
 - `key` is the 33-byte compressed public key for ECDSA accounts, the 32-byte public key for Ed25519 accounts, or a 32-byte identifier for generated accounts.
 - The last five bytes are a checksum over the preceding bytes.
 
@@ -52,14 +52,14 @@ As of `keetanet-client` version `0.18.4` the body is 63 characters for ECDSA acc
 Keeta may introduce further signing algorithms; the SDK is the authoritative source for the set of type bytes and for encoding and decoding (see [Resolution Mechanics](#resolution-mechanics)).
 
 A keyed address is a valid recipient on any Keeta network before any block has been published to its chain.
-A generated account is created by a `CREATE_IDENTIFIER` operation, and its identifier is derived from the creating account, the hash of the creating account's previous block on that network, and the index of the operation within that block.
+A generated account is created by a [`CREATE_IDENTIFIER` operation][generate-identifier], and its identifier is derived from the creating account, the hash of the creating account's previous block on that network, and the index of the operation within that block.
 The network account is derived from the network identifier alone, and the base token from the network account.
 
 #### Canonicalization
 
 A Keeta address is **case-insensitive**: per RFC 4648, two base32-encoded bodies that differ only in letter case decode to the same byte sequence and therefore identify the same account.
 For [CAIP-10][] purposes the canonical form is **all-lowercase**, and producers MUST lowercase the body before emitting a CAIP-10 string.
-Consumers MUST treat differently-cased CAIP-10 strings whose lowercased forms are equal as identifiers for the same account, and SHOULD lowercase incoming CAIP-10 strings before using them as cache or lookup keys.
+An uppercase or mixed-case body does not match the syntax in this profile; consumers MAY accept one by lowercasing it before validation, in which case the lowercased form identifies the same account and SHOULD be the form used as a cache or lookup key.
 
 ### Syntax
 
@@ -136,29 +136,29 @@ keeta:1413829460:aabfo65nbz4toez4ouzit3ej5elpcjnatv6p6vxtgj5gj4x4cbs3nkytnpniyhi
 Valid forms on other networks:
 
 ```
-# Mainnet, keyed Ed25519 account
+# Main network, keyed Ed25519 account
 keeta:21378:ae23cu2wimbyuvib6p77aw7zchgjmfia3fauuhy6mh44xa57buokkhifpsnxo
 
-# Mainnet, keyed secp256r1 account
+# Main network, keyed secp256r1 account
 keeta:21378:aybzhzcxweiencq2glio3sj6rs5g2sb7qcgmvrumi2y3dmt4sqqvg2zders2ggy
 
-# Mainnet token account
+# Main network, token account
 keeta:21378:anqdilpazdekdu4acw65fj7smltcp26wbrildkqtszqvverljpwpezmd44ssg
 
-# Mainnet storage account
+# Main network, storage account
 keeta:21378:aqltdal4rshtky5iehd765y3mdjkcmku5d4ulo5fgonzqrxulwepnogq33mle
 
-# Mainnet network account
+# Main network, network account
 keeta:21378:alwerxoezkupzhifvpo5yvoazlsdqaweov66mokhq7xl4h5ow36v5xu6ek3js
 
-# Mainnet multisig account
+# Main network, multisig account
 keeta:21378:a6wiuzcmz4lx3tenp5p24gs76epchg5i22xdkz4r3egopog47onnhhokvqjam
 ```
 
-Non-canonical (decode to a valid account but MUST be lowercased before being used as a CAIP-10 identifier; see [Canonicalization](#canonicalization)):
+Non-conformant but recoverable (does not match the syntax; a consumer MAY lowercase it, after which it identifies the same account as the lowercase form; see [Canonicalization](#canonicalization)):
 
 ```
-# Uppercase body -- same account as the lowercase form
+# Uppercase body
 keeta:21378:AE23CU2WIMBYUVIB6P77AW7ZCHGJMFIA3FAUUHY6MH44XA57BUOKKHIFPSNXO
 ```
 
@@ -217,6 +217,7 @@ Implementations SHOULD perform this check before signing a transaction that refe
 [CAIP-2 Profile]: ./caip2.md
 [accounts]: https://docs.keeta.com/components/accounts
 [signatures]: https://docs.keeta.com/security/digital-signatures
+[generate-identifier]: https://docs.keeta.com/components/blocks/operations/generateidentifier
 [sdk]: https://www.npmjs.com/package/@keetanetwork/keetanet-client
 [rfc4648]: https://datatracker.ietf.org/doc/html/rfc4648
 [CAIP-2]: https://chainagnostic.org/CAIPs/caip-2

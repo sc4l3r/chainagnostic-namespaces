@@ -16,7 +16,7 @@ _For context, see the [CAIP-19][] specification._
 ## Introduction
 
 Keeta has a single, native, first-class token model: every transferable asset on a Keeta network -- including the network's own base token -- is a [token account][accounts] with its own `keeta_...` address.
-There is no separate token-contract registry, no ERC-20-style metadata contract, and no parallel address space for NFTs: an NFT on Keeta is simply a token account whose raw on-chain supply is `1`.
+There is no separate token-contract registry, no ERC-20-style metadata contract, and no parallel address space for NFTs: an NFT on Keeta is simply a token account whose raw on-chain supply (before display decimals) is `1`.
 
 Because of this, every Keeta asset is fully identified by:
 
@@ -34,7 +34,7 @@ The inputs are:
 - The address of a token account, in the form defined by the [Keeta CAIP-10 Profile][CAIP-10 Profile].
 
 The asset-namespace tag is not enforced by the protocol -- Keeta itself does not distinguish "fungible" from "non-fungible" -- and is purely an interoperability hint to consumers.
-A CAIP-19 string with `nft:` referring to a token whose raw supply is greater than `1` SHOULD be treated as malformed by validators that have access to the chain.
+A validator with access to the chain MAY confirm the supply; a mismatch means the tag is stale, not that the identifier is invalid.
 
 | `asset_namespace` | Use                                                                                               | Equivalent in other namespaces                 |
 | :---------------- | :------------------------------------------------------------------------------------------------ | :--------------------------------------------- |
@@ -65,12 +65,12 @@ To validate a Keeta CAIP-19 identifier:
 1. Split on `/` and `:` and verify the namespace is `keeta` and the asset-namespace is `token` or `nft`.
 2. Validate `<network>` against the [Keeta CAIP-2 Profile][CAIP-2 Profile].
 3. Validate `<address>` as described in the [Keeta CAIP-10 Profile][CAIP-10 Profile]; the type byte MUST be that of a token account and the checksum MUST verify.
-4. For `nft`, consumers SHOULD query a node on the indicated network to confirm the token's raw on-chain supply is `1` (not its display amount after metadata decimals) before treating the identifier as a non-fungible asset, and SHOULD treat any identifier that fails this check as malformed.
+4. For `nft`, consumers SHOULD query a node on the indicated network to confirm the token's raw on-chain supply is `1` (not its display amount after metadata decimals) before treating the identifier as a non-fungible asset; because supply may be mutable, a mismatch means the hint is stale, not that the identifier is invalid.
 
 ## Rationale
 
 Keeta uses a single, unified address space for every transferable asset, including the base token: there is no separate native-coin concept at the protocol level.
-This profile reflects that by using `token` for every fungible asset and `nft` only as an interoperability hint for token accounts whose raw supply is `1`, mirroring the approach taken by the Solana namespace, which has a similarly unified address space for fungible and non-fungible assets.
+This profile reflects that by using `token` for every fungible asset and `nft` only as an interoperability hint for token accounts whose raw supply is `1`, mirroring the approach taken by the [Solana namespace][solana-caip19], which has a similarly unified address space for fungible and non-fungible assets.
 
 ### Backwards Compatibility
 
@@ -90,13 +90,13 @@ Base token of the Keeta test network:
 keeta:1413829460/token:anyiff4v34alvumupagmdyosydeq24lc4def5mrpmmyhx3j6vj2uucckeqn52
 ```
 
-Any other fungible token uses the same form, with the address of the relevant token account; for example USDC on mainnet:
+Any other fungible token uses the same form, with the address of the relevant token account; for example USDC on the main network:
 
 ```
 keeta:21378/token:amnkge74xitii5dsobstldatv3irmyimujfjotftx7plaaaseam4bntb7wnna
 ```
 
-NFT on mainnet (raw supply `1`):
+NFT on the main network (raw supply `1`):
 
 ```
 keeta:21378/nft:amob7pxzhexqych4g56bmmtovdgwr6kljloyzkyb34k37jntj24doaqfbx4xk
@@ -122,7 +122,7 @@ The [CAIP-19][] `token_id` segment is not defined for Keeta, as a token account 
 Should the protocol introduce NFT collections -- token accounts whose individual units are addressable -- a future revision of this profile will specify the `token_id` segment to identify a unit within such a collection.
 
 The Keeta main network is also registered in [SLIP-0044][] as coin type `8887` for use in HD-wallet derivation paths and similar SLIP-0044-indexed contexts.
-This profile does not surface SLIP-0044 in [CAIP-19][] form, since on Keeta the base token has a first-class on-chain address that already serves as a canonical [CAIP-19][] reference, and only mainnet has a SLIP-0044 entry.
+This profile does not surface SLIP-0044 in [CAIP-19][] form, since on Keeta the base token has a first-class on-chain address that already serves as a canonical [CAIP-19][] reference, and only the main network has a SLIP-0044 entry.
 
 ## References
 
@@ -136,6 +136,7 @@ This profile does not surface SLIP-0044 in [CAIP-19][] form, since on Keeta the 
 [accounts]: https://docs.keeta.com/components/accounts
 [sdk]: https://www.npmjs.com/package/@keetanetwork/keetanet-client
 [SLIP-0044]: https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+[solana-caip19]: https://namespaces.chainagnostic.org/solana/caip19
 [CAIP-19]: https://chainagnostic.org/CAIPs/caip-19
 
 ## Copyright
