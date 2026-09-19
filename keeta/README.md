@@ -2,7 +2,7 @@
 namespace-identifier: keeta
 title: Keeta
 author: ["@sc4l3r", "@xescure"]
-discussions-to: https://github.com/ChainAgnostic/namespaces/pull/XXXX
+discussions-to: https://github.com/ChainAgnostic/namespaces/pull/183
 status: Draft
 type: Informational
 created: 2026-04-27
